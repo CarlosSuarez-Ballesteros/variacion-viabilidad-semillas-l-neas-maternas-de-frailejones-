@@ -1,0 +1,637 @@
+
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+#
+# INTRODUCCION
+###################################################################################################################
+###################################################################################################################
+################################################################################################################### 
+# 
+# PROPOSITO DEL CODIGO
+#
+#
+# ARCHIVOS NECESARIOS PARA USAR EL CODIGO
+# El archivo "ViabilidadSemillasEspeletiaSumapaz_2025abr.09_092249.csv"
+# con datos con embrion estructuralmente sano
+# 
+# TABLA DE CONTENIDOS
+# 1) Lectura de datos.
+# 2) Examen del numero de coleccion, fecha, coordenadas geograficas y elevacion.
+# 3) Modelos de regresion logi貞tica para explicar la variacion en la proporcion de embriones estructuralmente enteros.
+# 4) Comparacion del apoyo empirico medido con AIC para los modelos de proporcion de embriones estructuralmente enteros.
+# 5) Modelos de regresion logistica para explicar la variacion en la proporcion de embriones estructuralmente enteros viables.
+# 6) Comparacion del apoyo empirico medido con AIC para los modelos de proporcion de embriones estructuralmente enteros viables
+#
+###################################################################################################################
+###################################################################################################################
+###################################################################################################################
+
+###################################################################################################################
+# 1) Lectura de datos.
+###################################################################################################################
+
+#directorio de trabajo
+setwd("D:/OneDrive/3_Banco_Semillas_JBB/2. JardinesComunes_Missouri_JBB_PNN/Tetrazolio/Paper_Revista biologia tropical")
+
+#leer archivo
+viaesp <- read.csv("ViabilidadSemillasEspeletiaSumapaz_2025abr.09_092249.csv", header=T)
+head(viaesp)
+dim(viaesp) 
+summary(viaesp)
+
+###################################################################################################################
+# 2) Tamanos muestrales.
+###################################################################################################################
+
+#tamano muestral de semillas por planta madre
+n.semillas <- rowSums(viaesp[,3:6])
+summary(n.semillas)
+
+#numero de semillas con embrion estructuralmente entero
+embsano <- rowSums(viaesp[,3:4])
+summary(embsano)
+
+###################################################################################################################
+# 3) Modelos de regresion logistica para explicar la variacion en la proporcion de embriones estructuralmente enteros viables.
+###################################################################################################################
+
+###################################################################################################################
+# 3.1) Modelo 1E: Altitud
+
+# 3.1.1) Ajuste del modelo y examen de los resultados
+modelo.1E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m, family="binomial")
+summary(modelo.1E)
+
+###################################################################################################################
+# 3.2) Modelo 2E: Epoca de cosecha
+
+# 3.2.1) Preliminares: definicion de epocas climaticas
+mes.colecta <- unlist(lapply(strsplit(viaesp$Fecha.coleccion, "-"), function(x) x[[2]]))
+unique(mes.colecta)
+unique(viaesp$Fecha.coleccion)
+epoca.clima <- rep(NA, length(mes.colecta))
+epoca.clima[mes.colecta=="dic"] <- "E3.seca"
+epoca.clima[mes.colecta=="ene"] <- "E3.seca"
+epoca.clima[mes.colecta=="feb"] <- "E3.seca"
+epoca.clima[mes.colecta=="mar"] <- "E3.seca"
+epoca.clima[mes.colecta=="abr"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="may"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="jun"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="jul"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="ago"] <- "E1.seca"
+epoca.clima[mes.colecta=="sep"] <- "E1.seca"
+epoca.clima[mes.colecta=="oct"] <- "E2.lluviosa"
+epoca.clima[mes.colecta=="nov"] <- "E2.lluviosa"
+table(epoca.clima)
+
+# 3.2.2.1) versiOn para local en EEUU
+#fecha.coleccion.ingles <- sub("-abr-", "-apr-", viaesp$Fecha.coleccion)
+#fecha.coleccion.ingles <- sub("-ago-", "-aug-", fecha.coleccion.ingles)
+#dia.colecta <- julian(as.Date(fecha.coleccion.ingles, format="%d-%b-%y"), origin = as.Date("2021-08-01"))
+#eje.limites.meses <- julian(seq(as.Date("2021-08-01"), by = "month", length.out = 13), origin = as.Date("2021-08-01"))
+#eje.nombre.meses <- julian(seq(as.Date("2021-08-15"), by = "month", length.out = 12), origin = as.Date("2021-08-01"))
+#eje.limites.epocas <- julian(as.Date(c("2021-08-01", "2021-10-01", "2021-12-01", "2022-04-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+#eje.nombre.epocas <- julian(as.Date(c("2021-09-01", "2021-11-01", "2022-02-01", "2022-06-01")), origin = as.Date("2021-08-01"))
+#eje.limites.agnos <- julian(as.Date(c("2021-08-01", "2022-01-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+#eje.nombre.agnos <- julian(as.Date(c("2021-10-15", "2022-04-15")), origin = as.Date("2021-08-01"))
+
+# 3.2.2.2) version para local en Colombia
+fecha.coleccion.Colom <- sub("-ene-", "-ene.-", viaesp$Fecha.coleccion)
+fecha.coleccion.Colom <- sub("-feb-", "-feb.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-mar-", "-mar.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-abr-", "-abr.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-may-", "-may.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-jun-", "-jun.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-jul-", "-jul.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-ago-", "-ago.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-sep-", "-sept.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-oct-", "-oct.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-nov-", "-nov.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-dic-", "-dic.-", fecha.coleccion.Colom)
+dia.colecta <- julian(as.Date(fecha.coleccion.Colom, format="%d-%b-%y"), origin = as.Date("2021-08-01"))
+eje.limites.meses <- julian(seq(as.Date("2021-08-01"), by = "month", length.out = 13), origin = as.Date("2021-08-01"))
+eje.nombre.meses <- julian(seq(as.Date("2021-08-15"), by = "month", length.out = 12), origin = as.Date("2021-08-01"))
+eje.limites.epocas <- julian(as.Date(c("2021-08-01", "2021-10-01", "2021-12-01", "2022-04-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+eje.nombre.epocas <- julian(as.Date(c("2021-09-01", "2021-11-01", "2022-02-01", "2022-06-01")), origin = as.Date("2021-08-01"))
+eje.limites.agnos <- julian(as.Date(c("2021-08-01", "2022-01-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+eje.nombre.agnos <- julian(as.Date(c("2021-10-15", "2022-04-15")), origin = as.Date("2021-08-01"))
+
+# 3.2.3) Ajuste del modelo y examen de los resultados
+modelo.2E <- glm(cbind(embsano, n.semillas-embsano) ~ epoca.clima, family="binomial")
+summary(modelo.2E)
+
+###################################################################################################################
+# 3.3) Modelo 3E: Especie taxonomica o grupo fenoti計ico
+
+# 3.3.1) Preliminares: definicion del factor grupos fenotipicos para que Espeletia.complejo.sinbracteas sea el intercepto
+
+grupo.feno <- factor(viaesp$grupo.fenotipico, levels = c("Espeletia.complejo.sinbracteas", "Espeletia.argentea", "Espeletia.cabrerensis", "Espeletia.complejo.grandiflora",
+ "Espeletia.killipii", "Espeletia.miradorensis", "Espeletia.summapacis"))
+
+# 3.3.2) Ajuste del modelo y examen de los resultados
+modelo.3E <- glm(cbind(embsano, n.semillas-embsano) ~ grupo.feno, family="binomial")
+summary(modelo.3E)
+
+###################################################################################################################
+# 3.4) Modelo 4E: Tamano de la planta madre
+
+# 3.4.1) Ajuste del modelo y examen de los resultados
+modelo.4E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm, family="binomial")
+summary(modelo.4E)
+
+###################################################################################################################
+# 3.5) Modelo 5E: Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.5.1) Ajuste del modelo y examen de los resultados
+modelo.5E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.5E)
+
+###################################################################################################################
+# 3.6) Modelo 6E: Altitud,Epoca de cosecha
+
+# 3.6.1) Ajuste del modelo y examen de los resultados
+modelo.6E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + epoca.clima, family="binomial")
+summary(modelo.6E)
+
+###################################################################################################################
+# 3.7) Modelo 7E: Altitud, Especie taxonomica o grupo fenoti計ico
+
+# 3.7.1) Ajuste del modelo y examen de los resultados
+modelo.7E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + grupo.feno, family="binomial")
+summary(modelo.7E)
+
+###################################################################################################################
+# 3.8) Modelo 8E: Altitud, Tamano de la planta madre
+
+# 3.8.1) Ajuste del modelo y examen de los resultados
+modelo.8E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm, family="binomial")
+summary(modelo.8E)
+
+###################################################################################################################
+# 3.9) Modelo 9E: Altitud, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.9.1) Ajuste del modelo y examen de los resultados
+modelo.9E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.9E)
+
+###################################################################################################################
+# 3.10) Modelo 10E: Epoca de cosecha, Especie taxonomica o grupo fenoti計ico
+
+# 3.10.1) Ajuste del modelo y examen de los resultados
+modelo.10E <- glm(cbind(embsano, n.semillas-embsano) ~  epoca.clima + grupo.feno, family="binomial")
+summary(modelo.10E)
+
+###################################################################################################################
+# 3.11) Modelo 11E: Epoca de cosecha, Longitud del tallo
+
+# 3.11.1) Ajuste del modelo y examen de los resultados
+modelo.11E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm + epoca.clima, family="binomial")
+summary(modelo.11E)
+
+###################################################################################################################
+# 3.12) Modelo 12E: Epoca de cosecha, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.12.1) Ajuste del modelo y examen de los resultados
+modelo.12E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.12E)
+
+###################################################################################################################
+# 3.13) Modelo 13E: Especie taxonomica o grupo fenoti計ico, Tamano de la planta madre
+
+# 3.13.1) Ajuste del modelo y examen de los resultados
+modelo.13E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm+ grupo.feno, family="binomial")
+summary(modelo.13E)
+
+###################################################################################################################
+# 3.14) Modelo 14E: Especie taxonomica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.14.1) Ajuste del modelo y examen de los resultados
+modelo.14E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.14E)
+
+###################################################################################################################
+# 3.15) Modelo 15E: Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.15.1) Ajuste del modelo y examen de los resultados
+modelo.15E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.15E)
+
+###################################################################################################################
+# 3.16) Modelo 16E: Altitud, Epoca de cosecha, Especie taxonomica o grupo fenot穩pico
+
+# 3.16.1) Ajuste del modelo y examen de los resultados
+modelo.16E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.16E)
+
+###################################################################################################################
+# 3.17) Modelo 17E: Altitud, Epoca de cosecha, Tamano de la planta madre
+
+# 3.17.1) Ajuste del modelo y examen de los resultados
+modelo.17E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + epoca.clima, family="binomial")
+summary(modelo.17E)
+
+###################################################################################################################
+# 3.18) Modelo 18E: Altitud, Epoca de cosecha, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.18.1) Ajuste del modelo y examen de los resultados
+modelo.18E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.18E)
+
+###################################################################################################################
+# 3.19) Modelo 19E: Altitud, Especie taxonomica o grupo fenoti計ico, Tamano de la planta madre
+
+# 3.19.1) Ajuste del modelo y examen de los resultados
+modelo.19E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + grupo.feno, family="binomial")
+summary(modelo.19E)
+
+###################################################################################################################
+# 3.20) Modelo 20E: Altitud, Especie taxonnmica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.20.1) Ajuste del modelo y examen de los resultados
+modelo.20E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.20E)
+
+###################################################################################################################
+# 3.21) Modelo 21E: altitud, Tamamo de la planta madre, dias entre colecta y prueba
+
+# 3.21.1) Ajuste del modelo y examen de los resultados
+modelo.21E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.21E)
+
+###################################################################################################################
+# 3.22) Modelo 22E: Epoca de cosecha, Especie taxonomica o grupo fenotipico, Tamano de la planta madre
+
+# 3.22.1) Ajuste del modelo y examen de los resultados
+modelo.22E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.22E)
+
+###################################################################################################################
+# 3.23) Modelo 23E: Epoca de cosecha, Especie taxonomica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.23.1) Ajuste del modelo y examen de los resultados
+modelo.23E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.23E)
+
+###################################################################################################################
+# 3.24) Modelo 24E: Epoca de cosecha, Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.24.1) Ajuste del modelo y examen de los resultados
+modelo.24E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.24E)
+
+###################################################################################################################
+# 3.25) Modelo 25E: Especie taxon籀mica o grupo fenoti計ico, Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.25.1) Ajuste del modelo y examen de los resultados
+modelo.25E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.25E)
+
+###################################################################################################################
+# 3.26) Modelo 26E: Altitud, Epoca de cosecha,Especie taxonomica o grupo fenoti計ico, Tamano de la planta madre
+
+# 3.26.1) Ajuste del modelo y examen de los resultados
+modelo.26E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.26E)
+
+###################################################################################################################
+# 3.27) Modelo 27E: Altitud, Epoca de cosecha,Especie taxonomica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.27.1) Ajuste del modelo y examen de los resultados
+modelo.27E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.27E)
+
+###################################################################################################################
+# 3.28) Modelo 28E: Altitud, Epoca de cosecha,Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.28.1) Ajuste del modelo y examen de los resultados
+modelo.28E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.28E)
+
+###################################################################################################################
+# 3.29) Modelo 29E: Altitud, Especie taxonomica o grupo fenoti計ico,Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.29.1) Ajuste del modelo y examen de los resultados
+modelo.29E<- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.29E)
+
+###################################################################################################################
+# 3.30) Modelo 30E: Epoca de cosecha, Especie taxonomica o grupo fenoti計ico,Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.30.1) Ajuste del modelo y examen de los resultados
+modelo.30E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.30E)
+
+###################################################################################################################
+# 3.31) Modelo 31E: Altitud, Epoca de cosecha, Especie taxonomica o grupo fenoti計ico, Tama簽o de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 3.31.1) Ajuste del modelo y examen de los resultados
+modelo.31E <- glm(cbind(embsano, n.semillas-embsano) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.31E)
+
+###################################################################################################################
+# 4) Comparacion del apoyo empirico de los modelos, medido con AIC.
+###################################################################################################################
+
+#Comparacion del apoyo empirico de los modelos, medido con AIC
+
+AIC.E <- c(modelo.1E$aic, modelo.2E$aic, modelo.3E$aic, modelo.4E$aic, modelo.5E$aic, modelo.6E$aic, modelo.7E$aic, modelo.8E$aic, modelo.9E$aic, 
+           modelo.10E$aic, modelo.11E$aic, modelo.12E$aic, modelo.13E$aic, modelo.14E$aic, modelo.15E$aic, modelo.16E$aic, modelo.17E$aic,  
+           modelo.18E$aic, modelo.19E$aic, modelo.20E$aic, modelo.21E$aic, modelo.22E$aic, modelo.23E$aic, modelo.24E$aic, modelo.25E$aic,
+           modelo.26E$aic, modelo.27E$aic, modelo.28E$aic, modelo.29E$aic, modelo.30E$aic, modelo.31E$aic)
+ 
+d.AIC.E <- min(AIC.E)- AIC.E
+
+###################################################################################################################
+# 5) Modelos de regresion logi貞tica para explicar la variacion en la proporcion de embriones estructuralmente enteros viables.
+###################################################################################################################
+
+###################################################################################################################
+# 5.1) Modelo 1T: Altitud
+
+# 5.1.1) Ajuste del modelo y examen de los resultados
+modelo.1T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m, family="binomial")
+summary(modelo.1T)
+
+###################################################################################################################
+# 5.2) Modelo 2T: Epoca de cosecha
+
+# 5.2.1) Preliminares: definicion de epocas climaticas
+mes.colecta <- unlist(lapply(strsplit(viaesp$Fecha.coleccion, "-"), function(x) x[[2]]))
+unique(mes.colecta)
+unique(viaesp$Fecha.coleccion)
+epoca.clima <- rep(NA, length(mes.colecta))
+epoca.clima[mes.colecta=="dic"] <- "E3.seca"
+epoca.clima[mes.colecta=="ene"] <- "E3.seca"
+epoca.clima[mes.colecta=="feb"] <- "E3.seca"
+epoca.clima[mes.colecta=="mar"] <- "E3.seca"
+epoca.clima[mes.colecta=="abr"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="may"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="jun"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="jul"] <- "E4.lluviosa"
+epoca.clima[mes.colecta=="ago"] <- "E1.seca"
+epoca.clima[mes.colecta=="sep"] <- "E1.seca"
+epoca.clima[mes.colecta=="oct"] <- "E2.lluviosa"
+epoca.clima[mes.colecta=="nov"] <- "E2.lluviosa"
+table(epoca.clima)
+
+# 5.2.2.1) versiOn para local en EEUU
+#fecha.coleccion.ingles <- sub("-abr-", "-apr-", viaesp$Fecha.coleccion)
+#fecha.coleccion.ingles <- sub("-ago-", "-aug-", fecha.coleccion.ingles)
+#dia.colecta <- julian(as.Date(fecha.coleccion.ingles, format="%d-%b-%y"), origin = as.Date("2021-08-01"))
+#eje.limites.meses <- julian(seq(as.Date("2021-08-01"), by = "month", length.out = 13), origin = as.Date("2021-08-01"))
+#eje.nombre.meses <- julian(seq(as.Date("2021-08-15"), by = "month", length.out = 12), origin = as.Date("2021-08-01"))
+#eje.limites.epocas <- julian(as.Date(c("2021-08-01", "2021-10-01", "2021-12-01", "2022-04-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+#eje.nombre.epocas <- julian(as.Date(c("2021-09-01", "2021-11-01", "2022-02-01", "2022-06-01")), origin = as.Date("2021-08-01"))
+#eje.limites.agnos <- julian(as.Date(c("2021-08-01", "2022-01-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+#eje.nombre.agnos <- julian(as.Date(c("2021-10-15", "2022-04-15")), origin = as.Date("2021-08-01"))
+
+# 5.2.2.2) version para local en Colombia
+fecha.coleccion.Colom <- sub("-ene-", "-ene.-", viaesp$Fecha.coleccion)
+fecha.coleccion.Colom <- sub("-feb-", "-feb.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-mar-", "-mar.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-abr-", "-abr.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-may-", "-may.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-jun-", "-jun.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-jul-", "-jul.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-ago-", "-ago.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-sep-", "-sept.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-oct-", "-oct.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-nov-", "-nov.-", fecha.coleccion.Colom)
+fecha.coleccion.Colom <- sub("-dic-", "-dic.-", fecha.coleccion.Colom)
+dia.colecta <- julian(as.Date(fecha.coleccion.Colom, format="%d-%b-%y"), origin = as.Date("2021-08-01"))
+eje.limites.meses <- julian(seq(as.Date("2021-08-01"), by = "month", length.out = 13), origin = as.Date("2021-08-01"))
+eje.nombre.meses <- julian(seq(as.Date("2021-08-15"), by = "month", length.out = 12), origin = as.Date("2021-08-01"))
+eje.limites.epocas <- julian(as.Date(c("2021-08-01", "2021-10-01", "2021-12-01", "2022-04-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+eje.nombre.epocas <- julian(as.Date(c("2021-09-01", "2021-11-01", "2022-02-01", "2022-06-01")), origin = as.Date("2021-08-01"))
+eje.limites.agnos <- julian(as.Date(c("2021-08-01", "2022-01-01", "2022-08-01")), origin = as.Date("2021-08-01"))
+eje.nombre.agnos <- julian(as.Date(c("2021-10-15", "2022-04-15")), origin = as.Date("2021-08-01"))
+
+# 5.2.2) Ajuste del modelo y examen de los resultados
+modelo.2T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ epoca.clima, family="binomial")
+summary(modelo.2T)
+
+###################################################################################################################
+# 5.3) Modelo 3T: Especie taxon籀mica o grupo fenotipico
+
+# 5.3.1) Preliminares: definicion del factor grupos fenotipicos para que Espeletia.complejo.sinbracteas sea el intercepto
+
+grupo.feno <- factor(viaesp$grupo.fenotipico, levels = c("Espeletia.complejo.sinbracteas", "Espeletia.argentea", "Espeletia.cabrerensis", "Espeletia.complejo.grandiflora",
+ "Espeletia.killipii", "Espeletia.miradorensis", "Espeletia.summapacis"))
+
+# 5.3.2) Ajuste del modelo y examen de los resultados
+modelo.3T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ grupo.feno, family="binomial")
+summary(modelo.3t)
+
+###################################################################################################################
+# 5.4) Modelo 4T: Tamano de la planta madre
+
+# 5.4.1) Ajuste del modelo y examen de los resultados
+modelo.4T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm, family="binomial")
+summary(modelo.4T)
+
+###################################################################################################################
+# 5.5) Modelo 5T: Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.5.1) Ajuste del modelo y examen de los resultados
+modelo.5T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.5T)
+
+###################################################################################################################
+# 5.6) Modelo 6T: Altitud,Epoca de cosecha
+
+# 5.6.1) Ajuste del modelo y examen de los resultados
+modelo.6T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud + epoca.clima, family="binomial")
+summary(modelo.6T)
+
+###################################################################################################################
+# 5.7) Modelo 7T: Altitud, Especie taxonomica o grupo fenoti計ico
+
+# 5.7.1) Ajuste del modelo y examen de los resultados
+modelo.7T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud + grupo.feno, family="binomial")
+summary(modelo.7T)
+
+###################################################################################################################
+# 5.8) Modelo 8T: Altitud, Tamano de la planta madre
+
+# 5.8.1) Ajuste del modelo y examen de los resultados
+modelo.8T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud + viaesp$Longitud.tallo.cm, family="binomial")
+summary(modelo.8T)
+
+###################################################################################################################
+# 5.9) Modelo 9T: Altitud, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.9.1) Ajuste del modelo y examen de los resultados
+modelo.9T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.9T)
+
+###################################################################################################################
+# 5.10) Modelo 10T: Epoca de cosecha, Especie taxonomica o grupo fenoti計ico
+
+# 5.10.1) Ajuste del modelo y examen de los resultados
+modelo.10T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~  epoca.clima + grupo.feno, family="binomial")
+summary(modelo.10T)
+
+###################################################################################################################
+# 5.11) Modelo 11T: Epoca de cosecha, Longitud del tallo
+
+# 5.11.1) Ajuste del modelo y examen de los resultados
+modelo.11T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm + epoca.clima, family="binomial")
+summary(modelo.11T)
+
+###################################################################################################################
+# 5.12) Modelo 12T: Epoca de cosecha, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.12.1) Ajuste del modelo y examen de los resultados
+modelo.12T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.12T)
+
+###################################################################################################################
+# 5.13) Modelo 13T: Especie taxonomica o grupo fenot穩pico, Tamano de la planta madre
+
+# 5.13.1) Ajuste del modelo y examen de los resultados
+modelo.13T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm+ grupo.feno, family="binomial")
+summary(modelo.13)
+
+###################################################################################################################
+# 5.14) Modelo 14T: Especie taxonomica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.14.1) Ajuste del modelo y examen de los resultados
+modelo.14T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.14T)
+
+###################################################################################################################
+# 5.15) Modelo 15T: Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.15.1) Ajuste del modelo y examen de los resultados
+modelo.15T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.15T)
+
+###################################################################################################################
+# 5.16) Modelo 16T: Altitud, Epoca de cosecha, Especie taxonomica o grupo fenot穩pico
+
+# 5.16.1) Ajuste del modelo y examen de los resultados
+modelo.16T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.16T)
+
+###################################################################################################################
+# 5.17) Modelo 17T: Altitud, Epoca de cosecha, Tamano de la planta madre
+
+# 5.17.1) Ajuste del modelo y examen de los resultados
+modelo.17T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + epoca.clima, family="binomial")
+summary(modelo.17T)
+
+###################################################################################################################
+# 5.18) Modelo 18T: Altitud, Epoca de cosecha, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.18.1) Ajuste del modelo y examen de los resultados
+modelo.18T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.18T)
+
+###################################################################################################################
+# 5.19) Modelo 19T: Altitud, Especie taxonomica o grupo fenoti計ico, Tamano de la planta madre
+
+# 5.19.1) Ajuste del modelo y examen de los resultados
+modelo.19T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + grupo.feno, family="binomial")
+summary(modelo.19T)
+
+###################################################################################################################
+# 5.20) Modelo 20T: Altitud, Especie taxonomica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.20.1) Ajuste del modelo y examen de los resultados
+modelo.20T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.20T)
+
+###################################################################################################################
+# 5.21) Modelo 21T: altitud, Tamano de la planta madre, dias entre colecta y prueba
+
+# 5.21.1) Ajuste del modelo y examen de los resultados
+modelo.21T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba, family="binomial")
+summary(modelo.21T)
+
+###################################################################################################################
+# 5.22) Modelo 22T: Epoca de cosecha, Especie taxonomica o grupo fenoti計ico, Tama簽o de la planta madre
+
+# 5.22.1) Ajuste del modelo y examen de los resultados
+modelo.22T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.22T)
+
+###################################################################################################################
+# 5.23) Modelo 23T: Epoca de cosecha, Especie taxonomica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.23.1) Ajuste del modelo y examen de los resultados
+modelo.23T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.23T)
+
+###################################################################################################################
+# 5.24) Modelo 24T: Epoca de cosecha, Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.24.1) Ajuste del modelo y examen de los resultados
+modelo.24T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.24T)
+
+###################################################################################################################
+# 5.25) Modelo 25T: Especie taxonomica o grupo fenoti計ico, Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.25.1) Ajuste del modelo y examen de los resultados
+modelo.25T <- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.25T)
+
+###################################################################################################################
+# 5.26) Modelo 26T: Altitud, Epoca de cosecha,Especie taxonomica o grupo fenot穩pico, Tama簽o de la planta madre
+
+# 5.26.1) Ajuste del modelo y examen de los resultados
+modelo.26T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.26T)
+
+###################################################################################################################
+# 5.27) Modelo 27T: Altitud, Epoca de cosecha,Especie taxonomica o grupo fenoti計ico, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.27.1) Ajuste del modelo y examen de los resultados
+modelo.27T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.27T)
+
+###################################################################################################################
+# 5.28) Modelo 28T: Altitud, Epoca de cosecha,Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.28.1) Ajuste del modelo y examen de los resultados
+modelo.28T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima, family="binomial")
+summary(modelo.28T)
+
+###################################################################################################################
+# 5.29) Modelo 29T: Altitud, Especie taxonomica o grupo fenoti計ico,Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.29.1) Ajuste del modelo y examen de los resultados
+modelo.29T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + grupo.feno, family="binomial")
+summary(modelo.29T)
+
+###################################################################################################################
+# 5.30) Modelo 30T: Epoca de cosecha, Especie taxonomica o grupo fenoti計ico,Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.30.1) Ajuste del modelo y examen de los resultados
+modelo.30T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.30T)
+
+###################################################################################################################
+# 5.31) Modelo 31T: Altitud, Epoca de cosecha, Especie taxonomica o grupo fenoti計ico, Tamano de la planta madre, Tiempo transcurrido entre la cosecha y la prueba
+
+# 5.31.1) Ajuste del modelo y examen de los resultados
+modelo.31T<- glm(cbind(viaesp$Viables, embsano-viaesp$Viables) ~ viaesp$Altitud.m + viaesp$Longitud.tallo.cm + viaesp$Dias.entre.colecta.y.prueba + epoca.clima + grupo.feno, family="binomial")
+summary(modelo.31T)
+
+###################################################################################################################
+# 6) Comparacion del apoyo empirico medido con AIC para los modelos de proporcion de embriones estructuralmente enteros viables
+###################################################################################################################
+
+#Comparaci籀n del apoyo emp穩rico de los modelos, medido con AIC
+
+AIC.T <- c(modelo.1T$aic,  modelo.2T$aic, modelo.3T$aic, modelo.4T$aic, modelo.5T$aic, modelo.6T$aic, modelo.7T$aic, modelo.8T$aic, modelo.9T$aic, 
+          modelo.10T$aic, modelo.11T$aic, modelo.12T$aic, modelo.13T$aic, modelo.14T$aic, modelo.15T$aic, modelo.16T$aic, modelo.17T$aic,  
+          modelo.18T$aic, modelo.19T$aic, modelo.20T$aic, modelo.21T$aic, modelo.22T$aic, modelo.23T$aic, modelo.24T$aic, modelo.25T$aic,
+          modelo.26T$aic, modelo.27T$aic, modelo.28T$aic, modelo.29T$aic, modelo.30T$aic, modelo.31T$aic)
+
+d.AIC.T <- min(AIC.T)- AIC.T
+
+
+
+
